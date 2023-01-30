@@ -10,7 +10,19 @@ export function activate(context: vscode.ExtensionContext) {
 
 		const provider = vscode.languages.registerDocumentDropEditProvider({ language: "*", scheme: 'file' }, {
 			async provideDocumentDropEdits(document, pos, dataTransfer, token): Promise<vscode.DocumentDropEdit> {
-				return new Promise(async resolve => await dataTransfer.get('text/plain')?.asString());
+				let mimeType: string = "";
+				dataTransfer.forEach((item, mime) => {
+					const fileName = item.asFile()?.name;
+					if (fileName) {
+						vscode.window.showInformationMessage("dropped " + fileName + " into editor");
+						mimeType = mime;
+					}
+				});
+				console.log("mimeType: " + mimeType);
+				console.log("fileName: " + dataTransfer.get(mimeType)?.asFile()?.name);
+				return new Promise(async resolve => resolve({
+					insertText: new TextDecoder().decode(await dataTransfer.get(mimeType)?.asFile()?.data())
+				}));
 			}
 		});
 
